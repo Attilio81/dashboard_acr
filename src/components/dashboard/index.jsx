@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { Container, Typography, CircularProgress, Box, Paper, FormControl, InputLabel, Select, MenuItem, Button, TextField, Grid } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useTheme, useMediaQuery } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const Dashboard = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -14,6 +16,9 @@ const Dashboard = () => {
   const [endDate, setEndDate] = useState('');
   const [isLoadingCombos, setIsLoadingCombos] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Caricamento iniziale delle combo
   useEffect(() => {
@@ -138,67 +143,90 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom sx={{ my: 3 }}>
+      <Typography 
+        variant={isMobile ? "h5" : "h4"} 
+        gutterBottom 
+        sx={{ my: isMobile ? 2 : 3 }}
+      >
         Dashboard Qualità dell'Aria
       </Typography>
-      
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Stazione</InputLabel>
-            <Select
-              value={selectedStation}
-              onChange={(e) => setSelectedStation(e.target.value)}
-              label="Stazione"
-            >
-              {stations.map((station) => (
-                <MenuItem key={station.station_id} value={station.station_id}>
-                  {station.station_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
 
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Parametro</InputLabel>
-            <Select
-              value={selectedParameter}
-              onChange={(e) => setSelectedParameter(e.target.value)}
-              label="Parametro"
-            >
-              {parameters.map((param) => (
-                <MenuItem key={param.parameter_id} value={param.parameter_id}>
-                  {param.parameter_description}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            type="date"
-            label="Data Inizio"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            type="date"
-            label="Data Fine"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <Button
-            variant="contained"
-            onClick={handleUpdateClick}
-            disabled={isLoadingData}
+      <Box 
+        display="flex" 
+        flexDirection={isMobile ? "column" : "row"}
+        gap={2} 
+        mb={3}
+      >
+        <FormControl fullWidth>
+          <InputLabel>Stazione</InputLabel>
+          <Select
+            value={selectedStation}
+            onChange={(e) => setSelectedStation(e.target.value)}
+            size={isMobile ? "small" : "medium"}
           >
-            {isLoadingData ? <CircularProgress size={24} /> : 'Aggiorna'}
-          </Button>
-        </Box>
-      </Paper>
+            {stations.map((station) => (
+              <MenuItem key={station.station_id} value={station.station_id}>
+                {station.station_name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>Parametro</InputLabel>
+          <Select 
+            value={selectedParameter}
+            onChange={(e) => setSelectedParameter(e.target.value)}
+            size={isMobile ? "small" : "medium"}
+          >
+            {parameters.map((param) => (
+              <MenuItem key={param.parameter_id} value={param.parameter_id}>
+                {param.parameter_description}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          type="date"
+          label="Data Inizio"
+          fullWidth
+          size={isMobile ? "small" : "medium"}
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+
+        <TextField
+          type="date"
+          label="Data Fine"
+          fullWidth
+          size={isMobile ? "small" : "medium"}
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+
+        <Button 
+          variant="contained"
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
+          onClick={handleUpdateClick}
+          disabled={isLoadingData}
+          sx={{ 
+            minWidth: 'auto',
+            width: isMobile ? '100%' : '56px',
+            height: isMobile ? '36px' : '56px',
+            borderRadius: '50%'
+          }}
+        >
+          {isLoadingData ? (
+            <CircularProgress size={24} />
+          ) : (
+            <RefreshIcon fontSize={isMobile ? "medium" : "large"} />
+          )}
+        </Button>
+      </Box>
 
       {selectedParameter && measurements.length > 0 && (
         <StatsCard 
@@ -209,22 +237,28 @@ const Dashboard = () => {
       )}
 
       {measurements.length > 0 && (
-        <Paper elevation={3} sx={{ p: 2 }}>
-          <LineChart
-            xAxis={[{ 
-              data: measurements.map(m => new Date(m.measurement_date)),
-              scaleType: 'time',
-              tickFormat: (value) => value.toLocaleDateString()
-            }]}
-            series={[
-              {
+        <Paper elevation={3} sx={{ p: isMobile ? 1 : 2 }}>
+          <Box height={isMobile ? 300 : 400}>
+            <LineChart
+              xAxis={[{ 
+                data: measurements.map(m => new Date(m.measurement_date)),
+                scaleType: 'time',
+                tickFormat: (value) => value.toLocaleDateString(),
+                tickLabelStyle: {
+                  fontSize: 12,
+                  angle: 45,
+                  textAnchor: 'start',
+                  dy: 10
+                }
+              }]}
+              series={[{
                 data: measurements.map(m => m.value),
                 area: true,
                 label: parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description,
-              },
-            ]}
-            height={400}
-          />
+              }]}
+              height={isMobile ? 300 : 400}
+            />
+          </Box>
         </Paper>
       )}
     </Container>
