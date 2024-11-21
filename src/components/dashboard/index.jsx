@@ -5,6 +5,10 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useTheme, useMediaQuery } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 
 const Dashboard = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -12,8 +16,8 @@ const Dashboard = () => {
   const [parameters, setParameters] = useState([]);
   const [selectedStation, setSelectedStation] = useState('');
   const [selectedParameter, setSelectedParameter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [isLoadingCombos, setIsLoadingCombos] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -187,25 +191,44 @@ const Dashboard = () => {
           </Select>
         </FormControl>
 
-        <TextField
-          type="date"
-          label="Data Inizio"
-          fullWidth
-          size={isMobile ? "small" : "medium"}
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: 2,
+              mb: 3 
+            }}
+          >
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <DatePicker
+                label="Data Inizio"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                slotProps={{ 
+                  textField: { 
+                    size: isMobile ? "small" : "medium",
+                    fullWidth: true 
+                  } 
+                }}
+              />
+            </FormControl>
 
-        <TextField
-          type="date"
-          label="Data Fine"
-          fullWidth
-          size={isMobile ? "small" : "medium"}
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <DatePicker
+                label="Data Fine"
+                value={endDate}
+                onChange={(newValue) => setEndDate(newValue)}
+                slotProps={{ 
+                  textField: { 
+                    size: isMobile ? "small" : "medium",
+                    fullWidth: true 
+                  } 
+                }}
+              />
+            </FormControl>
+          </Box>
+        </LocalizationProvider>
 
         <Button 
           variant="contained"
