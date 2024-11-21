@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Container, Typography, CircularProgress, Box, Paper, FormControl, InputLabel, Select, MenuItem, Button, TextField } from '@mui/material';
+import { Container, Typography, CircularProgress, Box, Paper, FormControl, InputLabel, Select, MenuItem, Button, TextField, Grid } from '@mui/material';
+import WarningIcon from '@mui/icons-material/Warning';
+import { LineChart } from '@mui/x-charts/LineChart';
 
 const Dashboard = () => {
   const [measurements, setMeasurements] = useState([]);
@@ -39,7 +40,7 @@ const Dashboard = () => {
         // Carica parametri
         const { data: parametersData, error: parametersError } = await supabase
           .from('parameters')
-          .select('parameter_id, parameter_description')
+          .select('parameter_id, parameter_description, limit, unit_description')
           .order('parameter_description');
 
         if (parametersError) throw parametersError;
@@ -81,6 +82,50 @@ const Dashboard = () => {
     } finally {
       setIsLoadingData(false);
     }
+  };
+
+  const calculateExceedances = (measurements, limit) => {
+    if (!measurements || !limit) return 0;
+    return measurements.filter(m => m.value > limit).length;
+  };
+
+  const StatsCard = ({ parameter, measurements, limit }) => {
+    const exceedances = calculateExceedances(measurements, limit);
+    const totalDays = measurements?.length || 0;
+    
+    return (
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          backgroundColor: exceedances > 0 ? '#fff3e0' : '#f1f8e9',
+          border: exceedances > 0 ? '1px solid #ffb74d' : '1px solid #aed581'
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            {exceedances > 0 && <WarningIcon color="warning" fontSize="large" />}
+          </Grid>
+          <Grid item xs>
+            <Typography variant="h6" gutterBottom>
+              {parameter?.parameter_description}
+            </Typography>
+            <Typography variant="body1">
+              Limite: {limit} {parameter?.unit_description}
+            </Typography>
+            <Typography variant="body1">
+              Superamenti: {exceedances} su {totalDays} giorni
+            </Typography>
+            {exceedances > 0 && (
+              <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
+                Soglia superata nel {((exceedances/totalDays) * 100).toFixed(1)}% dei giorni
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
+      </Paper>
+    );
   };
 
   if (isLoadingCombos) {
@@ -155,23 +200,31 @@ const Dashboard = () => {
         </Box>
       </Paper>
 
+      {selectedParameter && measurements.length > 0 && (
+        <StatsCard 
+          parameter={parameters.find(p => p.parameter_id === selectedParameter)}
+          measurements={measurements}
+          limit={parameters.find(p => p.parameter_id === selectedParameter)?.limit}
+        />
+      )}
+
       {measurements.length > 0 && (
         <Paper elevation={3} sx={{ p: 2 }}>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={measurements}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="measurement_date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#8884d8" 
-                name={parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <LineChart
+            xAxis={[{ 
+              data: measurements.map(m => new Date(m.measurement_date)),
+              scaleType: 'time',
+              tickFormat: (value) => value.toLocaleDateString()
+            }]}
+            series={[
+              {
+                data: measurements.map(m => m.value),
+                area: true,
+                label: parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description,
+              },
+            ]}
+            height={400}
+          />
         </Paper>
       )}
     </Container>
