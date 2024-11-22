@@ -16,8 +16,8 @@ const Dashboard = () => {
   const [parameters, setParameters] = useState([]);
   const [selectedStation, setSelectedStation] = useState('');
   const [selectedParameter, setSelectedParameter] = useState('');
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState(dayjs().subtract(1, 'year'));
+  const [endDate, setEndDate] = useState(dayjs());
   const [isLoadingCombos, setIsLoadingCombos] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -54,11 +54,10 @@ const Dashboard = () => {
 
         if (parametersError) throw parametersError;
 
-        console.log('Parameters loaded:', parametersData); // Aggiungi questo
-
+        console.log('Setting parameters state:', parametersData);
         setParameters(parametersData || []);
       } catch (error) {
-        console.error('Errore nel caricamento dei dati:', error);
+        console.error('Error loading combo data:', error);
       } finally {
         setIsLoadingCombos(false);
       }
@@ -146,27 +145,26 @@ const Dashboard = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Typography 
-        variant={isMobile ? "h5" : "h4"} 
-        gutterBottom 
-        sx={{ my: isMobile ? 2 : 3 }}
-      >
-        Dashboard Qualità dell'Aria
+    <Container>
+      <Typography variant="h4" gutterBottom>
+        Dashboard
       </Typography>
 
       <Box 
-        display="flex" 
-        flexDirection={isMobile ? "column" : "row"}
-        gap={2} 
-        mb={3}
+        sx={{
+          display: 'flex',
+          gap: 2,
+          mb: 3,
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}
       >
-        <FormControl fullWidth>
-          <InputLabel>Stazione</InputLabel>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="station-label">Stazione</InputLabel>
           <Select
+            labelId="station-label"
             value={selectedStation}
             onChange={(e) => setSelectedStation(e.target.value)}
-            size={isMobile ? "small" : "medium"}
           >
             {stations.map((station) => (
               <MenuItem key={station.station_id} value={station.station_id}>
@@ -176,114 +174,96 @@ const Dashboard = () => {
           </Select>
         </FormControl>
 
-        <FormControl fullWidth>
-          <InputLabel>Parametro</InputLabel>
-          <Select 
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="parameter-label">Parametro</InputLabel>
+          <Select
+            labelId="parameter-label"
             value={selectedParameter}
             onChange={(e) => setSelectedParameter(e.target.value)}
-            size={isMobile ? "small" : "medium"}
           >
-            {parameters.map((param) => (
-              <MenuItem key={param.parameter_id} value={param.parameter_id}>
-                {param.parameter_description}
+            {parameters.map((parameter) => (
+              <MenuItem key={parameter.parameter_id} value={parameter.parameter_id}>
+                {parameter.parameter_description}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Box 
-            sx={{ 
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: 2,
-              mb: 3 
-            }}
-          >
-            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
-              <DatePicker
-                label="Data Inizio"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                slotProps={{ 
-                  textField: { 
-                    size: isMobile ? "small" : "medium",
-                    fullWidth: true 
-                  } 
-                }}
-              />
-            </FormControl>
+          <DatePicker
+            label="Data Inizio"
+            value={startDate}
+            onChange={(newValue) => setStartDate(newValue)}
+            sx={{ width: 200 }}
+          />
+        </LocalizationProvider>
 
-            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
-              <DatePicker
-                label="Data Fine"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                slotProps={{ 
-                  textField: { 
-                    size: isMobile ? "small" : "medium",
-                    fullWidth: true 
-                  } 
-                }}
-              />
-            </FormControl>
-          </Box>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label="Data Fine"
+            value={endDate}
+            onChange={(newValue) => setEndDate(newValue)}
+            sx={{ width: 200 }}
+          />
         </LocalizationProvider>
 
         <Button 
           variant="contained"
-          fullWidth={isMobile}
-          size={isMobile ? "small" : "medium"}
           onClick={handleUpdateClick}
           disabled={isLoadingData}
           sx={{ 
             minWidth: 'auto',
-            width: isMobile ? '100%' : '56px',
-            height: isMobile ? '36px' : '56px',
+            width: '56px',
+            height: '56px',
             borderRadius: '50%'
           }}
         >
           {isLoadingData ? (
             <CircularProgress size={24} />
           ) : (
-            <RefreshIcon fontSize={isMobile ? "medium" : "large"} />
+            <RefreshIcon fontSize="large" />
           )}
         </Button>
       </Box>
 
-      {selectedParameter && measurements.length > 0 && (
-        <StatsCard 
-          parameter={parameters.find(p => p.parameter_id === selectedParameter)}
-          measurements={measurements}
-          limit={parameters.find(p => p.parameter_id === selectedParameter)?.limit}
-        />
-      )}
-
-      {measurements.length > 0 && (
-        <Paper elevation={3} sx={{ p: isMobile ? 1 : 2 }}>
-          <Box height={isMobile ? 300 : 400}>
-            <LineChart
-              xAxis={[{ 
-                data: measurements.map(m => new Date(m.measurement_date)),
-                scaleType: 'time',
-                tickFormat: (value) => value.toLocaleDateString(),
-                tickLabelStyle: {
-                  fontSize: 12,
-                  angle: 45,
-                  textAnchor: 'start',
-                  dy: 10
-                }
-              }]}
-              series={[{
-                data: measurements.map(m => m.value),
-                area: true,
-                label: parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description,
-              }]}
-              height={isMobile ? 300 : 400}
+      <Grid container spacing={3}>
+        {selectedParameter && measurements.length > 0 && (
+          <Grid item xs={12}>
+            <StatsCard 
+              parameter={parameters.find(p => p.parameter_id === selectedParameter)}
+              measurements={measurements}
+              limit={parameters.find(p => p.parameter_id === selectedParameter)?.limit}
             />
-          </Box>
-        </Paper>
-      )}
+          </Grid>
+        )}
+        {measurements.length > 0 && (
+          <Grid item xs={12}>
+            <Paper elevation={3} sx={{ p: isMobile ? 1 : 2 }}>
+              <Box height={isMobile ? 300 : 400}>
+                <LineChart
+                  xAxis={[{ 
+                    data: measurements.map(m => new Date(m.measurement_date)),
+                    scaleType: 'time',
+                    tickFormat: (value) => value.toLocaleDateString(),
+                    tickLabelStyle: {
+                      fontSize: 12,
+                      angle: 45,
+                      textAnchor: 'start',
+                      dy: 10
+                    }
+                  }]}
+                  series={[{
+                    data: measurements.map(m => m.value),
+                    area: true,
+                    label: parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description,
+                  }]}
+                  height={isMobile ? 300 : 400}
+                />
+              </Box>
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
     </Container>
   );
 };
