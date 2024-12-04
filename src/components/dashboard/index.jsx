@@ -166,7 +166,6 @@ const Dashboard = () => {
           gutterBottom 
           align="center"
           sx={{ 
-            color: 'primary.main',
             fontWeight: 500,
             mb: 4,
             fontFamily: 'Roboto Mono, monospace',
