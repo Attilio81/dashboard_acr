@@ -172,11 +172,11 @@ const Dashboard = () => {
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
-            backgroundImage: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            backgroundImage: 'linear-gradient(45deg, #2c3e50, #bdc3c7)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             color: 'transparent',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+            textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
           }}
         >
           Analisi Qualità dell'Aria
