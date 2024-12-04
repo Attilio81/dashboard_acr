@@ -13,8 +13,7 @@ import {
   Button, 
   Grid,
   useTheme,
-  useMediaQuery,
-  Stack
+  useMediaQuery
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { LineChart } from '@mui/x-charts/LineChart';
@@ -287,11 +286,13 @@ const Dashboard = () => {
                   dy: 10
                 }
               }]}
+
               series={[{
                 data: measurements.map(m => m.value),
                 area: true,
                 label: parameters.find(p => p.parameter_id === selectedParameter)?.parameter_description,
               }]}
+
               height={isMobile ? 300 : 400}
             />
           </Box>
