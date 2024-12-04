@@ -30,8 +30,8 @@ const Dashboard = () => {
   const [parameters, setParameters] = useState([]);
   const [selectedStation, setSelectedStation] = useState('');
   const [selectedParameter, setSelectedParameter] = useState('');
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState(dayjs().subtract(1, 'year'));
+  const [endDate, setEndDate] = useState(dayjs());
   const [isLoadingCombos, setIsLoadingCombos] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -68,11 +68,10 @@ const Dashboard = () => {
 
         if (parametersError) throw parametersError;
 
-        console.log('Parameters loaded:', parametersData); // Aggiungi questo
-
+        console.log('Setting parameters state:', parametersData);
         setParameters(parametersData || []);
       } catch (error) {
-        console.error('Errore nel caricamento dei dati:', error);
+        console.error('Error loading combo data:', error);
       } finally {
         setIsLoadingCombos(false);
       }
@@ -161,200 +160,112 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom 
-          align="center"
-          sx={{ 
-            color: 'primary.main',
-            fontWeight: 500,
-            mb: 4,
-            fontFamily: 'Roboto Mono, monospace',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
-            backgroundImage: 'linear-gradient(45deg, #1976d2, #64b5f6)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
-          Analisi Qualità dell'Aria
-        </Typography>
-      </Box>
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 4, 
-          mb: 4,
-          backgroundColor: 'background.paper',
-          borderRadius: 2
-        }}
+      <Typography 
+        variant={isMobile ? "h5" : "h4"} 
+        gutterBottom 
+        sx={{ my: isMobile ? 2 : 3 }}
       >
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel id="station-label">Stazione</InputLabel>
-              <Select
-                labelId="station-label"
-                value={selectedStation}
-                label="Stazione"
-                onChange={(e) => setSelectedStation(e.target.value)}
-                disabled={isLoadingCombos}
-                sx={{ 
-                  height: 56,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.dark',
-                  }
-                }}
-              >
-                {stations.map((station) => (
-                  <MenuItem key={station.station_id} value={station.station_id}>
-                    {station.station_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+        Dashboard Qualità dell'Aria
+      </Typography>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel id="parameter-label">Parametro</InputLabel>
-              <Select
-                labelId="parameter-label"
-                value={selectedParameter}
-                label="Parametro"
-                onChange={(e) => setSelectedParameter(e.target.value)}
-                disabled={isLoadingCombos}
-                sx={{ 
-                  height: 56,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.dark',
-                  }
-                }}
-              >
-                {parameters.map((parameter) => (
-                  <MenuItem key={parameter.parameter_id} value={parameter.parameter_id}>
-                    {parameter.parameter_description}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+      <Box 
+        display="flex" 
+        flexDirection={isMobile ? "column" : "row"}
+        gap={2} 
+        mb={3}
+      >
+        <FormControl fullWidth>
+          <InputLabel>Stazione</InputLabel>
+          <Select
+            value={selectedStation}
+            onChange={(e) => setSelectedStation(e.target.value)}
+            size={isMobile ? "small" : "medium"}
+          >
+            {stations.map((station) => (
+              <MenuItem key={station.station_id} value={station.station_id}>
+                {station.station_name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-          <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <FormControl fullWidth>
+          <InputLabel>Parametro</InputLabel>
+          <Select 
+            value={selectedParameter}
+            onChange={(e) => setSelectedParameter(e.target.value)}
+            size={isMobile ? "small" : "medium"}
+          >
+            {parameters.map((param) => (
+              <MenuItem key={param.parameter_id} value={param.parameter_id}>
+                {param.parameter_description}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: 2,
+              mb: 3 
+            }}
+          >
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <DatePicker
                 label="Data Inizio"
                 value={startDate}
                 onChange={(newValue) => setStartDate(newValue)}
-                disabled={isLoadingCombos}
-                format="DD/MM/YYYY"
-                sx={{
-                  width: '100%',
-                  '& .MuiInputBase-root': {
-                    height: 56,
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.dark',
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    variant: 'outlined',
-                    fullWidth: true,
-                  },
-                  inputAdornment: {
-                    position: 'end'
-                  }
+                slotProps={{ 
+                  textField: { 
+                    size: isMobile ? "small" : "medium",
+                    fullWidth: true 
+                  } 
                 }}
               />
-            </LocalizationProvider>
-          </Grid>
+            </FormControl>
 
-          <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <DatePicker
                 label="Data Fine"
                 value={endDate}
                 onChange={(newValue) => setEndDate(newValue)}
-                disabled={isLoadingCombos}
-                format="DD/MM/YYYY"
-                sx={{
-                  width: '100%',
-                  '& .MuiInputBase-root': {
-                    height: 56,
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.dark',
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    variant: 'outlined',
-                    fullWidth: true,
-                  },
-                  inputAdornment: {
-                    position: 'end'
-                  }
+                slotProps={{ 
+                  textField: { 
+                    size: isMobile ? "small" : "medium",
+                    fullWidth: true 
+                  } 
                 }}
               />
-            </LocalizationProvider>
-          </Grid>
+            </FormControl>
+          </Box>
+        </LocalizationProvider>
 
-          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleUpdateClick}
-              disabled={isLoadingData}
-              startIcon={<RefreshIcon />}
-              sx={{ 
-                minWidth: '200px',
-                height: '48px',
-                fontSize: '1.1rem',
-                textTransform: 'none',
-                borderRadius: 2,
-                boxShadow: 2,
-                '&:hover': {
-                  boxShadow: 4
-                }
-              }}
-            >
-              {isLoadingData ? <CircularProgress size={24} color="inherit" /> : 'Aggiorna'}
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+        <Button 
+          variant="contained"
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
+          onClick={handleUpdateClick}
+          disabled={isLoadingData}
+          sx={{ 
+            minWidth: 'auto',
+            width: isMobile ? '100%' : '56px',
+            height: isMobile ? '36px' : '56px',
+            borderRadius: '50%'
+          }}
+        >
+          {isLoadingData ? (
+            <CircularProgress size={24} />
+          ) : (
+            <RefreshIcon fontSize={isMobile ? "medium" : "large"} />
+          )}
+        </Button>
+      </Box>
 
       {selectedParameter && measurements.length > 0 && (
-        <StatsCard
+        <StatsCard 
           parameter={parameters.find(p => p.parameter_id === selectedParameter)}
           measurements={measurements}
           limit={parameters.find(p => p.parameter_id === selectedParameter)?.limit}
@@ -365,7 +276,7 @@ const Dashboard = () => {
         <Paper elevation={3} sx={{ p: isMobile ? 1 : 2 }}>
           <Box height={isMobile ? 300 : 400}>
             <LineChart
-              xAxis={[{
+              xAxis={[{ 
                 data: measurements.map(m => new Date(m.measurement_date)),
                 scaleType: 'time',
                 tickFormat: (value) => value.toLocaleDateString(),
